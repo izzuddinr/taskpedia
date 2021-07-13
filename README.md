@@ -57,8 +57,8 @@ http://localhost:18080/stat
 
 - Search (GET)
 http://localhost:18080/task/search/userid
-
+  
   Request Message Example:
-  {    
-      "UserID": 3
+  {
+    "UserID": 3
   }
