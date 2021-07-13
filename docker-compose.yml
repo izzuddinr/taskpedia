@@ -39,6 +39,7 @@ services:
     image: search
     restart: always
     build:
+      
       context: ./search
       dockerfile: ./Dockerfile
     links: 

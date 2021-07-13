@@ -4,7 +4,7 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/labstack/echo"
 	"github.com/nats-io/nats.go"
-	"github.com/olivere/elastic"
+	"github.com/olivere/elastic/v7"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -38,7 +38,7 @@ func InitControllers(
 	e.POST("/task/create", CreateTask)
 	e.POST("/task/update", UpdateTask)
 
-	e.GET("/task/search", SearchTaskByUser)
+	e.GET("/task/search/userid", SearchTaskByUserID)
 
 	e.GET("/stat", GetDataStats)
 }

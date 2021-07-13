@@ -10,7 +10,7 @@ import (
 	nats "github.com/nats-io/nats.go"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/olivere/elastic"
+	"github.com/olivere/elastic/v7"
 )
 
 var ctx = context.Background()

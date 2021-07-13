@@ -12,7 +12,7 @@ import (
 	"github.com/labstack/echo"
 
 	"github.com/go-redis/redis"
-	"github.com/olivere/elastic"
+	"github.com/olivere/elastic/v7"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
