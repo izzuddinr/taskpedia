@@ -13,7 +13,7 @@ services:
     environment:
       - "NATS_URI=nats://nats:4222"
       - "ELASTIC_URI=http://elasticsearch:9200"
-      - "REDIS_URI=http://redis:6379"
+      - "REDIS_URI=redis:6379"
     depends_on: 
       - "nats"
     ports:
@@ -63,6 +63,7 @@ services:
       '-m',
       '8222',
     ]
+
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0

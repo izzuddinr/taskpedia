@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/fortytw2/leaktest v1.3.0 // indirect
+	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.3.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect

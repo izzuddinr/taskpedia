@@ -11,6 +11,7 @@ import (
 
 	"github.com/labstack/echo"
 
+	"github.com/go-redis/redis"
 	"github.com/olivere/elastic"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -20,30 +21,31 @@ import (
 )
 
 var euri = os.Getenv("ELASTIC_URI")
+var ruri = os.Getenv("REDIS_URI")
+var nuri = os.Getenv("NATS_URI")
 
 var ctx = context.Background()
 var db = InitDB()
 var log = InitLogger()
 var e = echo.New()
 var esc = InitSearchClient()
+var rc = InitRedisClient()
 
 func main() {
-
-	uri := os.Getenv("NATS_URI")
 	log := InitLogger()
 
-	controllers.InitControllers(log, db, e, esc)
+	controllers.InitControllers(log, db, e, esc, rc)
 
 	var nc *nats.Conn
 
 	for i := 0; i < 5; i++ {
-		nConn, err := nats.Connect(uri)
+		nConn, err := nats.Connect(nuri)
 		if err == nil {
 			nc = nConn
 			break
 		}
 
-		fmt.Println("Waiting before connecting to NATS at:", uri)
+		fmt.Println("Waiting before connecting to NATS at:", nuri)
 		time.Sleep(1 * time.Second)
 	}
 
@@ -109,6 +111,23 @@ func InitSearchClient() *elastic.Client {
 		}
 	}
 
+	return client
+}
+
+func InitRedisClient() *redis.Client {
+
+	client := redis.NewClient(&redis.Options{
+		Addr: ruri,
+		DB:   0,
+	})
+
+	pong, err := client.Ping().Result()
+
+	if err != nil {
+		log.Fatalf("Ping to REDIS Server Failed!", err)
+	} else {
+		log.Infof("Ping to REDIS Server return: ", pong)
+	}
 	return client
 }
 

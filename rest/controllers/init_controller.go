@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/go-redis/redis"
 	"github.com/labstack/echo"
 	"github.com/nats-io/nats.go"
 	"github.com/olivere/elastic"
@@ -10,6 +11,7 @@ import (
 
 var ec *nats.EncodedConn
 var esc *elastic.Client
+var rc *redis.Client
 var log *logrus.Logger
 var db *gorm.DB
 
@@ -18,10 +20,12 @@ func InitControllers(
 	Database *gorm.DB,
 	Echo *echo.Echo,
 	Esc *elastic.Client,
+	Rc *redis.Client,
 ) {
 
 	log = Log
 	esc = Esc
+	rc = Rc
 	db = Database
 
 	e := Echo
@@ -35,6 +39,8 @@ func InitControllers(
 	e.POST("/task/update", UpdateTask)
 
 	e.GET("/task/search", SearchTaskByUser)
+
+	e.GET("/stat", GetDataStats)
 }
 
 func InitNatsConn(
