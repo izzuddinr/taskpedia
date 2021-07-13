@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"reflect"
 
 	"taskpedia-rest/models"
 
@@ -30,17 +30,22 @@ func SearchTaskByUser(c echo.Context) error {
 		Query(searchQuery).
 		Pretty(true).
 		Do(ctx)
-	if err != nil {
-		return c.JSON(http.StatusOK, searchResult)
-	}
-	log.Info(searchResult)
+	log.Error(err)
 
-	var rType models.Task
-	for _, item := range searchResult.Each(reflect.TypeOf(rType)) {
-		t := item.(models.Task)
-		taskList = append(taskList, t)
-	}
+	if searchResult.Hits.TotalHits > 0 {
+		fmt.Printf("Found a total of %d tasks\n", searchResult.Hits.TotalHits)
 
+		for _, hit := range searchResult.Hits.Hits {
+			var t models.Task
+			err := json.Unmarshal(*hit.Source, &t)
+			if err != nil {
+				log.Error(err)
+			}
+			taskList = append(taskList, t)
+		}
+	} else {
+		fmt.Print("Found no tasks\n")
+	}
 	return c.JSON(http.StatusOK, taskList)
 
 	// searchSrc := elastic.NewSearchSource()
