@@ -1,0 +1,111 @@
+version: '3.4'
+
+services:
+  taskpedia-rest:
+    container_name: taskpedia-rest-container
+    image: rest
+    restart: always
+    build:
+      context: ./rest
+      dockerfile: ./Dockerfile
+    links: 
+      - "nats"
+    environment:
+      - "NATS_URI=nats://nats:4222"
+      - "ELASTIC_URI=http://elasticsearch:9200"
+      - "REDIS_URI=http://redis:6379"
+    depends_on: 
+      - "nats"
+    ports:
+      - "18080:18080"
+  
+  taskpedia-worker:
+    container_name: taskpedia-worker-container
+    image: worker
+    restart: always
+    build:
+      context: ./worker
+      dockerfile: ./Dockerfile
+    links: 
+      - "nats"
+    environment:
+      - "NATS_URI=nats://nats:4222"
+      - "REDIS_URI=redis:6379"
+    depends_on: 
+      - "nats"
+
+  taskpedia-search:
+    container_name: taskpedia-search-container
+    image: search
+    restart: always
+    build:
+      context: ./search
+      dockerfile: ./Dockerfile
+    links: 
+      - "nats"
+    environment:
+      - "ELASTIC_URI=http://elasticsearch:9200"
+      - "NATS_URI=nats://nats:4222"
+    depends_on: 
+      - "nats"
+
+  nats:
+    container_name: nats-container
+    image: nats
+    ports:
+      - "8222:8222"
+      - "4222:4222"
+      - "6222:6222"
+    restart: always
+    command: [
+      '-p',
+      '4222',
+      '-m',
+      '8222',
+    ]
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
+    container_name: elasticsearch
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:7.4.0
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+
+  redis:
+    image: "redis:alpine"
+    command: redis-server
+    ports:
+      - "6379:6379"
+    volumes:
+      - $PWD/redis-data:/var/lib/redis
+      - $PWD/redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_REPLICATION_MODE=master
+
+volumes:
+  elasticsearch-data:
+    driver: local
