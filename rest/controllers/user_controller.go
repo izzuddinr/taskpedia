@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"context"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/labstack/echo"
@@ -42,7 +44,7 @@ func InsertUser(c echo.Context) error {
 			"message":   "User insertion successful!",
 			"timestamp": time.Now().Format(time.RFC850),
 		}
-
+		AddTransactionLogUser("CREATE USER", &user)
 		return c.JSON(http.StatusOK, result)
 	}
 
@@ -72,8 +74,19 @@ func UpdateUser(c echo.Context) error {
 			"message":   "User update successful!",
 			"timestamp": time.Now().Format(time.RFC850),
 		}
-
+		AddTransactionLogUser("UPDATE USER", &user)
 		return c.JSON(http.StatusOK, result)
 	}
+}
 
+func AddTransactionLogUser(ttype string, user *models.User) {
+
+	t := models.Transaction{
+		Type:      ttype,
+		Timestamp: time.Now(),
+		Details: []string{
+			"ID: " + strconv.FormatUint(uint64(user.ID), 10),
+			"Name: " + user.Name},
+	}
+	collection.InsertOne(context.TODO(), t)
 }

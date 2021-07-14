@@ -22,8 +22,6 @@ http://localhost:18080/user/update
     "Name": "123"
   }
   
-  
-  
 - View Task (GET)
 http://localhost:18080/task/view
 
@@ -62,3 +60,6 @@ http://localhost:18080/task/search/userid
   {
     "UserID": 3
   }
+
+- Log (GET)
+http://localhost:18080/log

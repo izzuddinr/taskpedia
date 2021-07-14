@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"context"
 	"net/http"
+	"strconv"
 	"taskpedia-rest/models"
 	"time"
 
@@ -53,6 +55,7 @@ func CreateTask(c echo.Context) error {
 			"timestamp": time.Now().Format(time.RFC850),
 		}
 
+		AddTransactionLogTask("CREATE TASK", &task)
 		return c.JSON(http.StatusOK, result)
 	}
 }
@@ -118,7 +121,7 @@ func UpdateTask(c echo.Context) error {
 			"message":   "Task update successful!",
 			"timestamp": time.Now().Format(time.RFC850),
 		}
-
+		AddTransactionLogTask("UPDATE TASK", &task)
 		return c.JSON(http.StatusOK, result)
 	}
 }
@@ -130,4 +133,23 @@ func publishNatsMsg(req *models.Task) {
 
 	log.Infof("Sending request %d | %v | %v", req.ID, req.Name, req.Desc)
 	sendChan <- req
+}
+
+func AddTransactionLogTask(ttype string, task *models.Task) {
+
+	t := models.Transaction{
+		Type:      ttype,
+		Timestamp: time.Now(),
+		Details: []string{
+			"ID: " + strconv.FormatUint(uint64(task.ID), 10),
+			"Name: " + task.Name,
+			"Desc: " + task.Desc,
+			"UserID: " + strconv.FormatUint(uint64(task.UserID), 10),
+			"Username: " + task.Username,
+			"Status: " + task.Status,
+			"CreatedAt: " + task.CreatedAt.String(),
+			"UpdatedAt: " + task.UpdatedAt.String(),
+		},
+	}
+	collection.InsertOne(context.TODO(), t)
 }

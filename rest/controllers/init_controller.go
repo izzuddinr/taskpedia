@@ -6,6 +6,7 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/olivere/elastic/v7"
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/mongo"
 	"gorm.io/gorm"
 )
 
@@ -14,10 +15,13 @@ var esc *elastic.Client
 var rc *redis.Client
 var log *logrus.Logger
 var db *gorm.DB
+var mdb *mongo.Client
+var collection *mongo.Collection
 
 func InitControllers(
 	Log *logrus.Logger,
-	Database *gorm.DB,
+	Db *gorm.DB,
+	Mdb *mongo.Client,
 	Echo *echo.Echo,
 	Esc *elastic.Client,
 	Rc *redis.Client,
@@ -26,9 +30,12 @@ func InitControllers(
 	log = Log
 	esc = Esc
 	rc = Rc
-	db = Database
+	db = Db
+	mdb = Mdb
 
 	e := Echo
+
+	collection = mdb.Database("taskpedia").Collection("transactions")
 
 	e.GET("/user/view", GetUser)
 	e.POST("/user/create", InsertUser)
@@ -41,6 +48,7 @@ func InitControllers(
 	e.GET("/task/search/userid", SearchTaskByUserID)
 
 	e.GET("/stat", GetDataStats)
+	e.GET("/log", GetTransactionsLog)
 }
 
 func InitNatsConn(

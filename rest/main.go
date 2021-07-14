@@ -16,6 +16,10 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+
 	"taskpedia-rest/controllers"
 	"taskpedia-rest/models"
 )
@@ -23,18 +27,22 @@ import (
 var euri = os.Getenv("ELASTIC_URI")
 var ruri = os.Getenv("REDIS_URI")
 var nuri = os.Getenv("NATS_URI")
+var muri = os.Getenv("MONGO_URI")
 
 var ctx = context.Background()
+
 var db = InitDB()
-var log = InitLogger()
+var mdb = InitMongo()
 var e = echo.New()
+
+var log = InitLogger()
 var esc = InitSearchClient()
 var rc = InitRedisClient()
 
 func main() {
 	log := InitLogger()
 
-	controllers.InitControllers(log, db, e, esc, rc)
+	controllers.InitControllers(log, db, mdb, e, esc, rc)
 
 	var nc *nats.Conn
 
@@ -70,7 +78,7 @@ func main() {
 
 func InitDB() *gorm.DB {
 
-	connString := "host=host.docker.internal user=postgres password=toor dbname=test_01 port=5432 sslmode=disable"
+	connString := "host=host.docker.internal user=postgres password=toor dbname=taskpedia port=5432 sslmode=disable"
 	dbConn, err := gorm.Open(postgres.Open(connString), &gorm.Config{})
 	if err != nil {
 		log.Fatal(err)
@@ -82,6 +90,28 @@ func InitDB() *gorm.DB {
 	}
 
 	return dbConn
+}
+
+func InitMongo() *mongo.Client {
+	mco := options.Client().ApplyURI(muri)
+
+	mc, err := mongo.Connect(context.TODO(), mco)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = mc.Ping(context.TODO(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dbList, errm := mc.ListDatabaseNames(context.TODO(), bson.D{})
+	if errm != nil {
+		log.Fatal(errm)
+	}
+	log.Infof("%+v", dbList)
+
+	return mc
 }
 
 func InitSearchClient() *elastic.Client {
